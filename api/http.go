@@ -22,6 +22,7 @@ func StartServer() {
 	})
 
 	r.GET("/search", func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		text := c.Query("t")
 
 		result := search.Search(text)
