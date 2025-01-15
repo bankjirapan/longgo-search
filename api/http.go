@@ -32,5 +32,5 @@ func StartServer() {
 		})
 	})
 
-	r.Run()
+	r.Run(":8090")
 }
