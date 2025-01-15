@@ -15,10 +15,10 @@ import (
 )
 
 func Crawler() {
-	var baseURL = "http://localhost:3000/docs3"
+	var baseURL = "https://map.longdo.com/docs3"
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
-	ctx, cancel = context.WithTimeout(ctx, 60*time.Second)
+	ctx, cancel = context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 	var htmlContent string
 	err := chromedp.Run(ctx,
@@ -32,18 +32,22 @@ func Crawler() {
 	_, links := utils.ParseHTML(strings.NewReader(htmlContent), "")
 	var jsonData []byte
 	for _, href := range links {
+		var subURLContent string
 		if utils.IsInternalLink(href) {
-			subURL := "http://localhost:3000" + href
+
+			subURL := "https://map.longdo.com" + href
 			fmt.Println(subURL)
 			err := chromedp.Run(ctx,
+
 				chromedp.Navigate(subURL),
 				chromedp.WaitVisible(`body`, chromedp.ByQuery),
-				chromedp.OuterHTML(`html`, &htmlContent),
+				chromedp.Sleep(2*time.Second),
+				chromedp.OuterHTML(`html`, &subURLContent),
 			)
 			if err != nil {
 				fmt.Println("Error: ", err)
 			}
-			contents, _ := utils.ParseHTML(strings.NewReader(htmlContent), "p, h1, h2, h3, h4, h5, h6")
+			contents, _ := utils.ParseHTML(strings.NewReader(subURLContent), "h1, h2, h3, h4, h5, h6, p")
 			result := map[string]interface{}{
 				"url":      subURL,
 				"contents": contents,
@@ -65,4 +69,5 @@ func Crawler() {
 	jsonData = append(jsonData, ']')
 	jsonData = append([]byte{'['}, jsonData...)
 	ioutil.WriteFile("data/web-data.json", jsonData, os.ModePerm)
+	fmt.Println("Crawling done!")
 }
