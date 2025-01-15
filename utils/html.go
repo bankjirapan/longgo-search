@@ -8,7 +8,7 @@ import (
 	goquery "github.com/PuerkitoBio/goquery"
 )
 
-func ParseHTML(filePath io.Reader) ([]string, map[string]string) {
+func ParseHTML(filePath io.Reader, htmlTag string) ([]string, map[string]string) {
 	doc, err := goquery.NewDocumentFromReader(filePath)
 	if err != nil {
 		fmt.Println("Error loading HTML file")
@@ -17,29 +17,54 @@ func ParseHTML(filePath io.Reader) ([]string, map[string]string) {
 
 	var contents []string
 	linkMap := make(map[string]string)
-	doc.Find("title").Each(func(_ int, s *goquery.Selection) {
-		title := s.Text()
-		fmt.Println(title)
-	})
 	doc.Find("body").Each(func(_ int, s *goquery.Selection) {
-		tagContents := make(map[string][]string)
-		s.Find("p, h1, h2, h3, h4, h5, h6").Each(func(_ int, element *goquery.Selection) {
-			tag := goquery.NodeName(element)
-			text := element.Text()
-			tagContents[tag] = append(tagContents[tag], text)
-		})
-		for tag, texts := range tagContents {
-			contents = append(contents, fmt.Sprintf("%s: %v", tag, texts))
+		if htmlTag == "" {
+			text := s.Text()
+			if text != "" {
+				contents = append(contents, text)
+			}
+		} else {
+			if htmlTag == "h1" {
+				s.Find("h1").Each(func(_ int, element *goquery.Selection) {
+					text := element.Text()
+					if text != "" {
+						contents = append(contents, "Header: "+text)
+					}
+				})
+			} else {
+				s.Find(htmlTag).Each(func(_ int, element *goquery.Selection) {
+					text := element.Text()
+					tagName := element.Nodes[0].Data
+					if text != "" {
+						contents = append(contents, tagName+": "+text)
+					}
+				})
+			}
 		}
 
 		s.Find("a").Each(func(_ int, link *goquery.Selection) {
 			href, exists := link.Attr("href")
 			if exists {
 				linkText := link.Text()
-				linkMap[linkText] = href
+				if linkText != "" {
+					linkMap[linkText] = href
+				}
 			}
 		})
 	})
+	contents = removeDuplicates(contents)
 
 	return contents, linkMap
+}
+
+func removeDuplicates(slice []string) []string {
+	seen := make(map[string]struct{})
+	var result []string
+	for _, v := range slice {
+		if _, ok := seen[v]; !ok {
+			seen[v] = struct{}{}
+			result = append(result, v)
+		}
+	}
+	return result
 }
