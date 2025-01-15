@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 
 	goquery "github.com/PuerkitoBio/goquery"
 )
@@ -67,4 +68,34 @@ func removeDuplicates(slice []string) []string {
 		}
 	}
 	return result
+}
+
+func FindH1Index(contents []string) int {
+	for i, content := range contents {
+		if strings.HasPrefix(content, "h1:") {
+			return i
+		}
+	}
+	return -1
+}
+
+func RemovePrefix(content string) string {
+	parts := strings.SplitN(content, ": ", 2)
+	if len(parts) > 1 {
+		return parts[1]
+	}
+	return content
+}
+
+func RemovePrefixArray(contents []string) []string {
+	var cleanedContents []string
+	for _, content := range contents {
+		parts := strings.SplitN(content, ": ", 2)
+		if len(parts) > 1 {
+			cleanedContents = append(cleanedContents, parts[1])
+		} else {
+			cleanedContents = append(cleanedContents, content)
+		}
+	}
+	return cleanedContents
 }

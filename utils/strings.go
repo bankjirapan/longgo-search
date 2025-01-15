@@ -7,3 +7,7 @@ func MergeStringSlices(slices ...[]string) []string {
 	}
 	return mergedSlice
 }
+
+func RemoveHTMLTags(content string) string {
+	return content
+}
