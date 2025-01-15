@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"longgo-search.com/crawler"
+	search "longgo-search.com/search"
 )
 
 func StartServer() {
@@ -17,6 +18,17 @@ func StartServer() {
 		go crawler.Crawler()
 		c.JSON(200, gin.H{
 			"message": "Crawling runing...",
+		})
+	})
+
+	r.GET("/search", func(c *gin.Context) {
+		text := c.Query("t")
+
+		result := search.Search(text)
+
+		c.JSON(200, gin.H{
+			"search": text,
+			"match":  result,
 		})
 	})
 
