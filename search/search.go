@@ -21,7 +21,7 @@ type Searcher interface {
 type Match struct {
 	URL     string   `json:"url"`
 	Heading string   `json:"heading"`
-	Text    []string `json:"text"`
+	Text    string   `json:"text"`
 	Tags    []string `json:"tags"`
 }
 
@@ -55,7 +55,7 @@ func Search(phrase string) []Match {
 				matchingDocuments = append(matchingDocuments, Match{
 					URL:     doc.URL,
 					Heading: utils.RemovePrefix(heading),
-					Text:    utils.RemovePrefixArray([]string{content}),
+					Text:    utils.RemovePrefix(content),
 					Tags:    extractURL,
 				})
 			}
