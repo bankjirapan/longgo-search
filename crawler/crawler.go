@@ -43,7 +43,7 @@ func Crawler() {
 			if err != nil {
 				fmt.Println("Error: ", err)
 			}
-			contents, _ := utils.ParseHTML(strings.NewReader(htmlContent), "p, h1")
+			contents, _ := utils.ParseHTML(strings.NewReader(htmlContent), "p, h1, h2, h3, h4, h5, h6")
 			result := map[string]interface{}{
 				"url":      subURL,
 				"contents": contents,
