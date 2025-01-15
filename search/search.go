@@ -38,15 +38,23 @@ func Search(phrase string) []Match {
 	}
 	for _, doc := range documents {
 		for _, content := range doc.Contents {
+			var heading string
 			plainContent := strings.ToLower(utils.RemoveHTMLTags(content))
 			searchPhrase := strings.ToLower(phrase)
 			headingH1 := utils.FindH1Index(doc.Contents)
+
+			if headingH1 != -1 {
+				heading = doc.Contents[headingH1]
+
+			} else {
+				heading = "No heading found"
+			}
 
 			if strings.Contains(plainContent, searchPhrase) {
 				extractURL := utils.ExtractURL(doc.URL)
 				matchingDocuments = append(matchingDocuments, Match{
 					URL:     doc.URL,
-					Heading: utils.RemovePrefix(doc.Contents[headingH1]),
+					Heading: utils.RemovePrefix(heading),
 					Text:    utils.RemovePrefixArray([]string{content}),
 					Tags:    extractURL,
 				})
