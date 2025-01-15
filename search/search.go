@@ -22,6 +22,7 @@ type Match struct {
 	URL     string   `json:"url"`
 	Heading string   `json:"heading"`
 	Text    []string `json:"text"`
+	Tags    []string `json:"tags"`
 }
 
 func Search(phrase string) []Match {
@@ -42,10 +43,12 @@ func Search(phrase string) []Match {
 			headingH1 := utils.FindH1Index(doc.Contents)
 
 			if strings.Contains(plainContent, searchPhrase) {
+				extractURL := utils.ExtractURL(doc.URL)
 				matchingDocuments = append(matchingDocuments, Match{
 					URL:     doc.URL,
 					Heading: utils.RemovePrefix(doc.Contents[headingH1]),
 					Text:    utils.RemovePrefixArray([]string{content}),
+					Tags:    extractURL,
 				})
 			}
 		}
