@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .title }}</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        dialog {
+            width: 90%;
+            max-width: 600px;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            background-color: #fff;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+
+        dialog[open] {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dialog-header {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .dialog-body {
+            max-height: 600px;
+            overflow: scroll;
+            flex: 1;
+        }
+
+        .dialog-item {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .dialog-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .dialog-tags {
+            margin-top: 5px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.3em 0.6em;
+            margin: 0.2em;
+            font-size: 0.8em;
+            color: #fff;
+            border-radius: 0.25em;
+            text-align: center;
+            background-color: #3357FF;
+        }
+
+        .dialog-footer {
+            text-align: right;
+            margin-top: 10px;
+        }
+
+        .close-button {
+            padding: 8px 15px;
+            background-color: #3357FF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .close-button:hover {
+            background-color: #2548b3;
+        }
+
+        .dialog-search-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="search-container">
+        <input type="text" id="openSearchDialog" class="search-input" placeholder="Click to search...">
+        <dialog id="searchDialog">
+            <div class="dialog-header">
+                Search
+                <input type="text" id="dialogSearchInput" class="dialog-search-input" placeholder="Type to search...">
+            </div>
+            <div class="dialog-body" id="dialogBody">
+                <p>No results found</p>
+            </div>
+            <div class="dialog-footer">
+                <button class="close-button" id="closeDialog">Close</button>
+            </div>
+        </dialog>
+    </div>
+
+    <script>
+        const openSearchDialog = document.getElementById('openSearchDialog');
+        const searchDialog = document.getElementById('searchDialog');
+        const dialogSearchInput = document.getElementById('dialogSearchInput');
+        const dialogBody = document.getElementById('dialogBody');
+        const closeDialogButton = document.getElementById('closeDialog');
+        let timeout = null;
+
+        openSearchDialog.addEventListener('click', () => {
+            if (!searchDialog.open) searchDialog.showModal();
+            dialogSearchInput.focus();
+        });
+
+        dialogSearchInput.addEventListener('input', () => {
+            const query = dialogSearchInput.value.trim();
+            clearTimeout(timeout);
+            if (!query) {
+                dialogBody.innerHTML = '<p>No results found</p>';
+                return;
+            }
+            timeout = setTimeout(() => {
+                fetchResults(query);
+            }, 500);
+        });
+
+        async function fetchResults(query) {
+            try {
+                const response = await fetch(`/search?t=${encodeURIComponent(query)}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const { match } = await response.json();
+                renderDialog(match);
+            } catch (error) {
+                console.error('Error fetching search results:', error);
+                dialogBody.innerHTML = '<div class="dialog-item">Error fetching results</div>';
+            }
+        }
+
+        function renderDialog(items) {
+            if (!items.length) {
+                dialogBody.innerHTML = '<p>No results found</p>';
+            } else {
+                dialogBody.innerHTML = items.map(item => `
+                    <div class="dialog-item">
+                        <strong>${item.heading}</strong>
+                        <p>${item.text}</p>
+                        <div class="dialog-tags">
+                            ${item?.tags?.map(tag => `<span class="badge">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        closeDialogButton.addEventListener('click', () => {
+            searchDialog.close();
+        });
+
+        searchDialog.addEventListener('click', (event) => {
+            if (event.target === searchDialog) {
+                searchDialog.close();
+            }
+        });
+    </script>
+    
+</body>
+</html>
