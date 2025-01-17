@@ -41,7 +41,7 @@ func Search(phrase string) []Match {
 			var heading string
 			plainContent := strings.ToLower(utils.RemoveHTMLTags(content))
 			searchPhrase := strings.ToLower(phrase)
-			headingH1 := utils.FindH1Index(doc.Contents)
+			headingH1 := utils.FindHeadingIndex(doc.Contents, "h1:")
 
 			if headingH1 != -1 {
 				heading = doc.Contents[headingH1]
@@ -62,5 +62,4 @@ func Search(phrase string) []Match {
 		}
 	}
 	return matchingDocuments
-
 }

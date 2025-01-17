@@ -70,9 +70,9 @@ func removeDuplicates(slice []string) []string {
 	return result
 }
 
-func FindH1Index(contents []string) int {
+func FindHeadingIndex(contents []string, heading string) int {
 	for i, content := range contents {
-		if strings.HasPrefix(content, "h1:") {
+		if strings.HasPrefix(content, heading) {
 			return i
 		}
 	}
