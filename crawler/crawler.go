@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -14,8 +15,12 @@ import (
 	utils "longgo-search.com/utils"
 )
 
-func Crawler() {
-	var baseURL = "https://map.longdo.com/docs3"
+func Crawler(urlStr string) {
+	url, errParse := url.Parse(urlStr)
+	if errParse != nil {
+		log.Fatal(errParse)
+	}
+	baseURL := url.String()
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 	ctx, cancel = context.WithTimeout(ctx, 5*time.Minute)
@@ -35,10 +40,13 @@ func Crawler() {
 		var subURLContent string
 		if utils.IsInternalLink(href) {
 
-			subURL := "https://map.longdo.com" + href
-			fmt.Println(subURL)
-			err := chromedp.Run(ctx,
+			url.Path = ""
+			url.RawQuery = ""
+			url.Fragment = ""
 
+			subURL := url.String() + href
+			fmt.Println("Crawling: ", subURL)
+			err := chromedp.Run(ctx,
 				chromedp.Navigate(subURL),
 				chromedp.WaitVisible(`body`, chromedp.ByQuery),
 				chromedp.Sleep(2*time.Second),
