@@ -12,10 +12,12 @@ import (
 	"time"
 
 	"github.com/chromedp/chromedp"
+	"longgo-search.com/maid"
 	utils "longgo-search.com/utils"
 )
 
 func Crawler(urlStr string) {
+	maidService := &maid.MaidService{}
 	url, errParse := url.Parse(urlStr)
 	if errParse != nil {
 		log.Fatal(errParse)
@@ -35,21 +37,25 @@ func Crawler(urlStr string) {
 		log.Fatal(err)
 	}
 	_, links := utils.ParseHTML(strings.NewReader(htmlContent), "")
+	var totalLinks int
 	var jsonData []byte
+	totalLinks = len(links)
+	fmt.Println("Total links found: ", totalLinks)
 	for _, href := range links {
 		var subURLContent string
 		if utils.IsInternalLink(href) {
-
 			url.Path = ""
 			url.RawQuery = ""
 			url.Fragment = ""
 
 			subURL := url.String() + href
 			fmt.Println("Crawling: ", subURL)
+			totalLinks--
+			fmt.Println("Remaining links: ", totalLinks)
 			err := chromedp.Run(ctx,
 				chromedp.Navigate(subURL),
 				chromedp.WaitVisible(`body`, chromedp.ByQuery),
-				chromedp.Sleep(2*time.Second),
+				chromedp.Sleep(1*time.Second),
 				chromedp.OuterHTML(`html`, &subURLContent),
 			)
 			if err != nil {
@@ -68,6 +74,7 @@ func Crawler(urlStr string) {
 			jsonData = append(jsonData, ',')
 
 		} else {
+			fmt.Println("External link: ", href)
 			// /
 		}
 	}
@@ -76,6 +83,16 @@ func Crawler(urlStr string) {
 	}
 	jsonData = append(jsonData, ']')
 	jsonData = append([]byte{'['}, jsonData...)
+
+	var jsonForMaid []maid.Content
+	errCleaning := json.Unmarshal([]byte(jsonData), &jsonForMaid)
+	if errCleaning != nil {
+		fmt.Println("Error parsing JSON:", err)
+		return
+	}
+
+	maidService.RemoveAllDuplicates(jsonForMaid)
+
 	ioutil.WriteFile("data/web-data.json", jsonData, os.ModePerm)
 	fmt.Println("Crawling done!")
 }
